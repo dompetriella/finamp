@@ -1,23 +1,28 @@
 import 'package:balanced_text/balanced_text.dart';
 import 'package:finamp/components/PlayerScreen/queue_source_helper.dart';
+import 'package:finamp/components/global_snackbar.dart';
 import 'package:finamp/l10n/app_localizations.dart';
 import 'package:finamp/models/finamp_models.dart';
+import 'package:finamp/screens/player_screen.dart';
+import 'package:finamp/services/finamp_settings_helper.dart';
 import 'package:finamp/services/queue_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../extensions/localizations.dart';
 
-class PlayerScreenAppBarTitle extends StatefulWidget {
+class PlayerScreenAppBarTitle extends ConsumerStatefulWidget {
   const PlayerScreenAppBarTitle({super.key, required this.maxLines});
 
   final int maxLines;
 
   @override
-  State<PlayerScreenAppBarTitle> createState() => _PlayerScreenAppBarTitleState();
+  ConsumerState<PlayerScreenAppBarTitle> createState() => _PlayerScreenAppBarTitleState();
 }
 
-class _PlayerScreenAppBarTitleState extends State<PlayerScreenAppBarTitle> {
+class _PlayerScreenAppBarTitleState extends ConsumerState<PlayerScreenAppBarTitle> {
   final QueueService _queueService = GetIt.instance<QueueService>();
 
   @override
@@ -25,6 +30,8 @@ class _PlayerScreenAppBarTitleState extends State<PlayerScreenAppBarTitle> {
     final currentTrackStream = _queueService.getCurrentTrackStream();
 
     final screenWidth = MediaQuery.widthOf(context);
+
+    final splitScreenState = ref.watch(finampSettingsProvider.allowSplitScreen);
 
     return StreamBuilder<FinampQueueItem?>(
       stream: currentTrackStream,
@@ -35,39 +42,59 @@ class _PlayerScreenAppBarTitleState extends State<PlayerScreenAppBarTitle> {
         }
         final queueItem = snapshot.data!;
 
-        return ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: screenWidth * 0.62),
-          child: GestureDetector(
-            onTap: () => navigateToSource(context, queueItem.source),
-            child: Column(
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.playingFromType(queueItem.source.type.name),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w300,
-                    color: Theme.brightnessOf(context) == Brightness.dark
-                        ? Colors.white.withValues(alpha: 0.7)
-                        : Colors.black.withValues(alpha: 0.8),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: screenWidth * 0.62),
+              child: GestureDetector(
+                onTap: () => navigateToSource(context, queueItem.source),
+                child: Column(
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.playingFromType(queueItem.source.type.name),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w300,
+                        color: Theme.brightnessOf(context) == Brightness.dark
+                            ? Colors.white.withValues(alpha: 0.7)
+                            : Colors.black.withValues(alpha: 0.8),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                    const Padding(padding: EdgeInsets.symmetric(vertical: 1)),
+                    BalancedText(
+                      queueItem.source.name.getLocalized(context.l10n),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.brightnessOf(context) == Brightness.dark
+                            ? Colors.white
+                            : Colors.black.withValues(alpha: 0.9),
+                      ),
+                      maxLines: widget.maxLines,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                const Padding(padding: EdgeInsets.symmetric(vertical: 1)),
-                BalancedText(
-                  queueItem.source.name.getLocalized(context.l10n),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.brightnessOf(context) == Brightness.dark
-                        ? Colors.white
-                        : Colors.black.withValues(alpha: 0.9),
-                  ),
-                  maxLines: widget.maxLines,
-                  textAlign: TextAlign.center,
-                ),
-              ],
+              ),
             ),
-          ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                onPressed: () async {
+                  if (splitScreenState) {
+                    GlobalSnackbar.navigatorState!.pushNamed(PlayerScreen.routeName);
+                    await Future.delayed(Duration(milliseconds: 100));
+                    FinampSetters.setAllowSplitScreen(false);
+                  } else {
+                    FinampSetters.setAllowSplitScreen(true);
+                  }
+                },
+                icon: Icon(splitScreenState ? Symbols.right_panel_open : Symbols.left_panel_open),
+              ),
+            ),
+          ],
         );
       },
     );
