@@ -509,13 +509,15 @@ class NowPlayingBar extends ConsumerWidget {
                 builder: (context, snapshot) {
                   if (snapshot.hasData &&
                       snapshot.data!.saveState == SavedQueueState.loading &&
-                      !usingPlayerSplitScreen) {
+                      !SplitScreenHelper.usingPlayerSplitScreen) {
                     return buildLoadingQueueBar(ref, null);
                   } else if (snapshot.hasData &&
                       snapshot.data!.saveState == SavedQueueState.failed &&
-                      !usingPlayerSplitScreen) {
+                      !SplitScreenHelper.usingPlayerSplitScreen) {
                     return buildLoadingQueueBar(ref, queueService.retryQueueLoad);
-                  } else if (snapshot.hasData && snapshot.data!.currentTrack != null && !usingPlayerSplitScreen) {
+                  } else if (snapshot.hasData &&
+                      snapshot.data!.currentTrack != null &&
+                      !SplitScreenHelper.usingPlayerSplitScreen) {
                     return buildNowPlayingBar(ref, snapshot.data!.currentTrack!);
                   } else {
                     return const SizedBox.shrink();
