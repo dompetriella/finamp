@@ -5,6 +5,7 @@ import 'package:finamp/components/HomeScreen/home_screen_content.dart';
 import 'package:finamp/components/MusicScreen/artist_type_selection_row.dart';
 import 'package:finamp/components/MusicScreen/music_screen_tab_view.dart';
 import 'package:finamp/components/MusicScreen/sort_and_filter_row.dart';
+import 'package:finamp/components/PlayerScreen/player_screen_appbar_title.dart';
 import 'package:finamp/components/global_snackbar.dart';
 import 'package:finamp/components/now_playing_bar.dart';
 import 'package:finamp/l10n/app_localizations.dart';
@@ -17,6 +18,7 @@ import 'package:finamp/services/finamp_user_helper.dart';
 import 'package:finamp/services/item_by_id_provider.dart';
 import 'package:finamp/services/jellyfin_api_helper.dart';
 import 'package:finamp/services/music_providers.dart';
+import 'package:finamp/services/split_screen_transition_provider.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -256,7 +258,9 @@ class _MusicScreenState extends ConsumerState<MusicScreen> with TickerProviderSt
           textEditingController: textEditingController,
           isSearching: isSearching,
         ),
-        bottomNavigationBar: NowPlayingBar(),
+        // Temporarily block the now playing bar during a split screen transition
+        bottomNavigationBar: ref.watch(splitScreenTransitionProvider) ? null : NowPlayingBar(),
+        // bottomNavigationBar: NowPlayingBar(),
         drawerEnableOpenDragGesture: widget.showHeader,
         drawer: widget.showHeader ? const MusicScreenDrawer() : null,
         floatingActionButton: Padding(
