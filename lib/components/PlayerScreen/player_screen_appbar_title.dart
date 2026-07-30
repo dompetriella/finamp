@@ -3,6 +3,7 @@ import 'package:finamp/components/PlayerScreen/player_split_screen_scaffold.dart
 import 'package:finamp/components/PlayerScreen/queue_source_helper.dart';
 import 'package:finamp/components/global_snackbar.dart';
 import 'package:finamp/l10n/app_localizations.dart';
+import 'package:finamp/menus/components/icon_button_with_semantics.dart';
 import 'package:finamp/models/finamp_models.dart';
 import 'package:finamp/screens/player_screen.dart';
 import 'package:finamp/services/finamp_settings_helper.dart';
@@ -87,7 +88,10 @@ class _PlayerScreenAppBarTitleState extends ConsumerState<PlayerScreenAppBarTitl
             if (allowSplitScreen)
               Align(
                 alignment: Alignment.centerLeft,
-                child: IconButton(
+                child: IconButtonWithSemantics(
+                  label: splitScreenState
+                      ? AppLocalizations.of(context)!.switchToFullscreenViewTooltip
+                      : AppLocalizations.of(context)!.switchToSplitScreenViewTooltip,
                   onPressed: () async {
                     final splitScreenTransitionNotifier = ref.read(splitScreenTransitionProvider.notifier);
                     if (splitScreenState) {
@@ -104,7 +108,7 @@ class _PlayerScreenAppBarTitleState extends ConsumerState<PlayerScreenAppBarTitl
                       });
                     }
                   },
-                  icon: Icon(splitScreenState ? Symbols.right_panel_open : Symbols.left_panel_open),
+                  icon: splitScreenState ? Symbols.right_panel_open : Symbols.left_panel_open,
                 ),
               ),
           ],

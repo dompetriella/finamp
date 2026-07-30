@@ -1686,6 +1686,14 @@
     },
     "allowSplitScreenTitle": "Allow SplitScreen Mode",
     "allowSplitScreenSubtitle": "The player will be displayed alongside other views on wider displays.",
+    "switchToFullscreenViewTooltip": "Switch to Full Screen View",
+    "@switchToFullscreenViewTooltip": {
+        "description": "Tooltip for the button that switches from split screen to full screen player view"
+    },
+    "switchToSplitScreenViewTooltip": "Switch to Split Screen View",
+    "@switchToSplitScreenViewTooltip": {
+        "description": "Tooltip for the button that switches from full screen to split screen player view"
+    },
     "enableVibration": "Enable vibration",
     "enableVibrationSubtitle": "Whether to enable vibration.",
     "oneLineMarqueeTextButton": "Auto-scroll Long Titles",
