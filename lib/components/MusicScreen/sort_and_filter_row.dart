@@ -231,6 +231,7 @@ class SortAndFilterRow extends ConsumerWidget {
       bottom: false,
       child: GestureDetector(
         onTap: showMenu,
+        onSecondaryTap: showMenu,
         behavior: HitTestBehavior.opaque,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4),
