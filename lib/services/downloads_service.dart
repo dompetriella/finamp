@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:background_downloader/background_downloader.dart';
 import 'package:collection/collection.dart';
@@ -26,6 +27,9 @@ import 'finamp_settings_helper.dart';
 const isarDatabaseName = "finamp_db.isar";
 const repairStepTrackingName = "repairStep";
 
+// Record instead of class for easy equality checking
+typedef DownloadsProgress = ({double progress, int expectedFileSize});
+
 class DownloadsService {
   final _downloadsLogger = Logger("downloadsService");
   final _isar = GetIt.instance<Isar>();
@@ -40,6 +44,10 @@ class DownloadsService {
   final Map<DownloadItemState, int> downloadStatuses = {};
   late final Stream<Map<DownloadItemState, int>> downloadStatusesStream;
   final StreamController<Map<DownloadItemState, int>> _downloadStatusesStreamController = StreamController.broadcast();
+
+  final Map<int, DownloadsProgress> _downloadProgress = {};
+  late final Stream<void> downloadProgressStream;
+  final StreamController<void> _downloadProgressStreamController = StreamController.broadcast();
 
   // This triggers refresh of music/artist screens on item deletion
   late final Stream<void> offlineDeletesStream;
@@ -160,11 +168,21 @@ class DownloadsService {
         .toList();
   });
 
+  late final progressProvider = Provider.family.autoDispose<DownloadsProgress?, int>((ref, isarId) {
+    var subscription = downloadProgressStream.listen((_) {
+      ref.state = _downloadProgress[isarId];
+    });
+    ref.onDispose(subscription.cancel);
+    return _downloadProgress[isarId];
+  });
+
   /// Constructs the service.  startQueues should also be called to complete initialization.
   DownloadsService() {
     // Initialize downloadStatuses dict with actual counts of items in isar with
     // that state.  Calls to updateItemState will keep this up to date as the
     // state of an item is changed.
+    const kStreamThrottleTime = Duration(milliseconds: 200);
+
     for (var state in DownloadItemState.values) {
       downloadStatuses[state] = _isar.downloadItems
           .where()
@@ -178,10 +196,17 @@ class DownloadsService {
     }
 
     downloadStatusesStream = _downloadStatusesStreamController.stream.throttleTime(
-      const Duration(milliseconds: 200),
+      kStreamThrottleTime,
       leading: false,
       trailing: true,
     );
+
+    downloadProgressStream = _downloadProgressStreamController.stream.throttleTime(
+      kStreamThrottleTime,
+      leading: false,
+      trailing: true,
+    );
+
     offlineDeletesStream = _offlineDeletesStreamController.stream;
     downloadCountsStream = _downloadCountsStreamController.stream;
 
@@ -282,6 +307,21 @@ class DownloadsService {
             _downloadsLogger.severe("Could not determine item for id ${event.task.taskId}, event:${event.toString()}");
           }
         });
+      } else if (event is TaskProgressUpdate) {
+        final taskId = event.task.taskId;
+        final isarId = int.tryParse(taskId);
+        if (isarId == null) {
+          _downloadsLogger.severe("Unabled to find item to download with id $taskId");
+          return;
+        }
+
+        if (event.progress < 0 || event.progress >= 1.0) {
+          _downloadProgress.remove(isarId);
+        } else {
+          _downloadProgress[isarId] = (progress: event.progress, expectedFileSize: event.expectedFileSize);
+        }
+
+        _downloadProgressStreamController.add(null);
       }
     });
 
@@ -901,6 +941,11 @@ class DownloadsService {
         }
       }
       item.state = newState;
+
+      if (newState.isFinal && item.type.hasFiles) {
+        _downloadProgress.remove(item.isarId);
+      }
+
       _isar.downloadItems.putSync(item, saveLinks: false);
       List<DownloadItem> parents = _isar.downloadItems
           .where()
