@@ -172,14 +172,22 @@ class DownloadedItemListTile extends ConsumerWidget {
         duration: Duration(milliseconds: 200),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 2,
+          spacing: 4,
           children: [
             ItemFileSize(stub: stub),
             if (itemDownloadProgress?.progress != null)
-              LinearProgressIndicator(
-                value: itemDownloadProgress!.progress,
-                minHeight: 12,
-                borderRadius: BorderRadius.circular(8),
+              Row(
+                spacing: 16,
+                children: [
+                  Flexible(
+                    child: LinearProgressIndicator(
+                      value: itemDownloadProgress!.progress,
+                      minHeight: 12,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  if (itemDownloadProgress.hasNetworkSpeed) Text(itemDownloadProgress.networkSpeedAsString),
+                ],
               ),
           ],
         ),

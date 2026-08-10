@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:background_downloader/background_downloader.dart';
 import 'package:collection/collection.dart';
@@ -27,9 +26,6 @@ import 'finamp_settings_helper.dart';
 const isarDatabaseName = "finamp_db.isar";
 const repairStepTrackingName = "repairStep";
 
-// Record instead of class for easy equality checking
-typedef DownloadsProgress = ({double progress, int expectedFileSize});
-
 class DownloadsService {
   final _downloadsLogger = Logger("downloadsService");
   final _isar = GetIt.instance<Isar>();
@@ -45,7 +41,7 @@ class DownloadsService {
   late final Stream<Map<DownloadItemState, int>> downloadStatusesStream;
   final StreamController<Map<DownloadItemState, int>> _downloadStatusesStreamController = StreamController.broadcast();
 
-  final Map<int, DownloadsProgress> _downloadProgress = {};
+  final Map<int, TaskProgressUpdate> _downloadsProgress = {};
   late final Stream<void> downloadProgressStream;
   final StreamController<void> _downloadProgressStreamController = StreamController.broadcast();
 
@@ -168,12 +164,13 @@ class DownloadsService {
         .toList();
   });
 
-  late final progressProvider = Provider.family.autoDispose<DownloadsProgress?, int>((ref, isarId) {
+  // Gets download progress for invididual downloading files
+  late final progressProvider = Provider.family.autoDispose<TaskProgressUpdate?, int>((ref, isarId) {
     var subscription = downloadProgressStream.listen((_) {
-      ref.state = _downloadProgress[isarId];
+      ref.state = _downloadsProgress[isarId];
     });
     ref.onDispose(subscription.cancel);
-    return _downloadProgress[isarId];
+    return _downloadsProgress[isarId];
   });
 
   /// Constructs the service.  startQueues should also be called to complete initialization.
@@ -316,9 +313,9 @@ class DownloadsService {
         }
 
         if (event.progress < 0 || event.progress >= 1.0) {
-          _downloadProgress.remove(isarId);
+          _downloadsProgress.remove(isarId);
         } else {
-          _downloadProgress[isarId] = (progress: event.progress, expectedFileSize: event.expectedFileSize);
+          _downloadsProgress[isarId] = event;
         }
 
         _downloadProgressStreamController.add(null);
@@ -943,7 +940,7 @@ class DownloadsService {
       item.state = newState;
 
       if (newState.isFinal && item.type.hasFiles) {
-        _downloadProgress.remove(item.isarId);
+        _downloadsProgress.remove(item.isarId);
       }
 
       _isar.downloadItems.putSync(item, saveLinks: false);
