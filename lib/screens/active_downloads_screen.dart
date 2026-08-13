@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:finamp/components/finamp_app_bar_back_button.dart';
 import 'package:finamp/l10n/app_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:rxdart/rxdart.dart';
 
-import '../components/DownloadsErrorScreen/download_error_list.dart';
+import '../components/ActiveDownloadsScreen/active_download_list.dart';
 import '../components/global_snackbar.dart';
 import '../components/padded_custom_scrollview.dart';
 import '../models/finamp_models.dart';
 import '../services/downloads_service.dart';
 
-class ActiveDownloadsScreen extends StatelessWidget {
+class ActiveDownloadsScreen extends ConsumerWidget {
   const ActiveDownloadsScreen({super.key});
 
   static const routeName = "/downloads/errors";
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final downloadsService = GetIt.instance<DownloadsService>();
+
     var stream =
         Rx.combineLatest4<
           List<DownloadStub>,
@@ -65,14 +67,31 @@ class ActiveDownloadsScreen extends StatelessWidget {
             } else {
               return PaddedCustomScrollview(
                 slivers: [
+                  _AllDownloadsHeader(downloadsService: downloadsService),
                   if (snapshot.data![0].isNotEmpty)
-                    DownloadErrorList(state: DownloadItemState.syncFailed, children: snapshot.data![0]),
+                    ActiveDownloadList(
+                      state: DownloadItemState.syncFailed,
+                      downloadsService: downloadsService,
+                      children: snapshot.data![0],
+                    ),
                   if (snapshot.data![1].isNotEmpty)
-                    DownloadErrorList(state: DownloadItemState.failed, children: snapshot.data![1]),
+                    ActiveDownloadList(
+                      state: DownloadItemState.failed,
+                      downloadsService: downloadsService,
+                      children: snapshot.data![1],
+                    ),
                   if (snapshot.data![2].isNotEmpty)
-                    DownloadErrorList(state: DownloadItemState.downloading, children: snapshot.data![2]),
+                    ActiveDownloadList(
+                      state: DownloadItemState.downloading,
+                      downloadsService: downloadsService,
+                      children: snapshot.data![2],
+                    ),
                   if (snapshot.data![3].isNotEmpty)
-                    DownloadErrorList(state: DownloadItemState.enqueued, children: snapshot.data![3]),
+                    ActiveDownloadList(
+                      state: DownloadItemState.enqueued,
+                      downloadsService: downloadsService,
+                      children: snapshot.data![3],
+                    ),
                 ],
               );
             }
@@ -89,6 +108,101 @@ class ActiveDownloadsScreen extends StatelessWidget {
           }
         },
       ),
+    );
+  }
+}
+
+class _AllDownloadsHeader extends ConsumerStatefulWidget {
+  const _AllDownloadsHeader({super.key, required this.downloadsService});
+
+  final DownloadsService downloadsService;
+
+  @override
+  ConsumerState<_AllDownloadsHeader> createState() => _AllDownloadsHeaderState();
+}
+
+class _AllDownloadsHeaderState extends ConsumerState<_AllDownloadsHeader> {
+  // Size of the current batch, captured once and held until the queue drains.
+  int? _batchTotal;
+
+  @override
+  Widget build(BuildContext context) {
+    final downloadStatuses = widget.downloadsService.downloadStatuses;
+    final allDownloadsProgress = ref.watch(widget.downloadsService.allProgressProvider);
+
+    final downloading = downloadStatuses[DownloadItemState.downloading] ?? 0;
+    final enqueued = downloadStatuses[DownloadItemState.enqueued] ?? 0;
+    final remaining = downloading + enqueued;
+
+    final totalDownloadSpeed = allDownloadsProgress.values
+        .where((e) => e.hasNetworkSpeed)
+        .fold(0.0, (sum, e) => sum + e.networkSpeed);
+
+    final averageDownloadSpeed = allDownloadsProgress.isNotEmpty
+        ? totalDownloadSpeed / allDownloadsProgress.length
+        : 0.0;
+
+    final avgSpeedAsString = widget.downloadsService.getNetworkSpeedAsString(
+      networkSpeed: averageDownloadSpeed,
+      decimals: 3,
+    );
+
+    if (remaining == 0) {
+      _batchTotal = null;
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    // First frame of a batch: lock in its size. If more items get queued
+    // mid-batch, grow the total rather than letting progress exceed 100%.
+    if (_batchTotal == null || remaining > _batchTotal!) {
+      _batchTotal = remaining;
+    }
+
+    final completed = _batchTotal! - remaining;
+    final overallProgress = completed / _batchTotal!;
+
+    return PinnedHeaderSliver(
+      child: Column(
+        spacing: 8,
+        children: [
+          DownloadsProgressLinearIndicator(progressValue: overallProgress, widthFactor: 3 / 4, minHeight: 16),
+          Text('Average Download Speed: $avgSpeedAsString'),
+        ],
+      ),
+    );
+  }
+}
+
+class DownloadsProgressLinearIndicator extends StatelessWidget {
+  const DownloadsProgressLinearIndicator({
+    super.key,
+    required this.progressValue,
+    this.minHeight = 12,
+    this.widthFactor = 1,
+  });
+
+  final double progressValue;
+  final double minHeight;
+  final double widthFactor;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: progressValue),
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+      builder: (context, animatedValue, child) {
+        return FractionallySizedBox(
+          widthFactor: widthFactor,
+          child: LinearProgressIndicator(
+            value: animatedValue,
+            minHeight: minHeight,
+            borderRadius: BorderRadius.circular(minHeight / 2),
+            semanticsLabel: 'Download Progress',
+            semanticsValue: '${(animatedValue * 100).round()}%',
+          ),
+        );
+      },
     );
   }
 }
