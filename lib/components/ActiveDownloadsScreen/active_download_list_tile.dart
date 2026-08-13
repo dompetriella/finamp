@@ -22,6 +22,7 @@ class ActiveDownloadListTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    const kNetworkSpeedDecimals = 2;
     final itemDownloadProgress = ref.watch(downloadsService.progressProvider(downloadTask.isarId));
 
     return ListTile(
@@ -39,7 +40,6 @@ class ActiveDownloadListTile extends ConsumerWidget {
           if (itemDownloadProgress?.progress != null)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
               children: [
                 Flexible(
                   child: DownloadsProgressLinearIndicator(
@@ -47,12 +47,26 @@ class ActiveDownloadListTile extends ConsumerWidget {
                     widthFactor: 3 / 4,
                   ),
                 ),
-
-                Text(
-                  downloadsService.getNetworkSpeedAsString(
-                    networkSpeed: itemDownloadProgress.networkSpeed,
-                    decimals: 2,
-                  ),
+                Stack(
+                  alignment: Alignment.centerRight,
+                  children: [
+                    // Prevents layout shifting when moving between
+                    // progress states and data sizes
+                    Visibility(
+                      visible: false,
+                      maintainSize: true,
+                      maintainAnimation: true,
+                      maintainState: true,
+                      child: Text('999.${'9' * kNetworkSpeedDecimals} MB/s'), // adjust to your actual widest case
+                    ),
+                    Text(
+                      downloadsService.getNetworkSpeedAsString(
+                        networkSpeed: itemDownloadProgress.networkSpeed,
+                        decimals: kNetworkSpeedDecimals,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ],
                 ),
               ],
             ),
