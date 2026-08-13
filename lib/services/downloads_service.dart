@@ -164,13 +164,20 @@ class DownloadsService {
         .toList();
   });
 
-  // Gets download progress for invididual downloading files
-  late final progressProvider = Provider.family.autoDispose<TaskProgressUpdate?, int>((ref, isarId) {
+  // Gets download progress for all downloading files
+  late final allProgressProvider = Provider.autoDispose<Map<int, TaskProgressUpdate>>((ref) {
     var subscription = downloadProgressStream.listen((_) {
-      ref.state = _downloadsProgress[isarId];
+      ref.state = Map.unmodifiable(_downloadsProgress);
     });
     ref.onDispose(subscription.cancel);
-    return _downloadsProgress[isarId];
+    return Map.unmodifiable(_downloadsProgress);
+  });
+
+  // Gets download progress for an individual downloading file.  Derived from
+  // allProgressProvider via select so a widget only rebuilds when this specific
+  // item's progress actually changes, rather than on every throttle tick.
+  late final progressProvider = Provider.family.autoDispose<TaskProgressUpdate?, int>((ref, isarId) {
+    return ref.watch(allProgressProvider.select((progress) => progress[isarId]));
   });
 
   /// Constructs the service.  startQueues should also be called to complete initialization.
@@ -1789,4 +1796,10 @@ class DownloadsService {
       return outdated ? DownloadItemStatus.incidentalOutdated : DownloadItemStatus.incidental;
     }
   }
+
+  String getNetworkSpeedAsString({required double networkSpeed, int decimals = 0}) => switch (networkSpeed) {
+    <= 0 => '-- MB/s',
+    >= 1 => '${networkSpeed.toStringAsFixed(decimals)} MB/s',
+    _ => '${(networkSpeed * 1000).toStringAsFixed(decimals)} kB/s',
+  };
 }
