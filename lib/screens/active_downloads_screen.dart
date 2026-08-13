@@ -166,7 +166,7 @@ class _AllDownloadsHeaderState extends ConsumerState<_AllDownloadsHeader> {
         spacing: 8,
         children: [
           DownloadsProgressLinearIndicator(progressValue: overallProgress, widthFactor: 3 / 4, minHeight: 16),
-          Text('Average Download Speed: $avgSpeedAsString'),
+          Text('${AppLocalizations.of(context)!.averageDownloadSpeed}: $avgSpeedAsString'),
         ],
       ),
     );

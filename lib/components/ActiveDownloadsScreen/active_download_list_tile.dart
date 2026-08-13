@@ -71,7 +71,9 @@ class ActiveDownloadListTile extends ConsumerWidget {
               ],
             ),
           if (itemDownloadProgress?.hasTimeRemaining ?? false)
-            Text('Time Remaining: ${itemDownloadProgress!.timeRemainingAsString}'),
+            Text(
+              '${AppLocalizations.of(context)!.downloadTimeRemaining}: ${itemDownloadProgress!.timeRemainingAsString}',
+            ),
         ],
       ),
     );
