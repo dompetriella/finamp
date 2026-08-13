@@ -2068,7 +2068,7 @@
     "@genericCancel": {
         "description": "Used when the user stops an action from taking place inside a popup dialog window"
     },
-    "itemDeletedSnackbar": "{itemType, select, album{Album} playlist{Playlist} artist{Artist} genre{Genre} track{Track} library{Library} other{Item}} got deleted from {deviceType, select, device{Device} server{Server} other{unknown}}",
+    "itemDeletedSnackbar": "{itemType, select, album{Album} playlist{Playlist} artist{Artist} genre{Genre} track{Track} library{Library} other{Item}} deleted from {deviceType, select, device{Device} server{Server} other{unknown}}",
     "@itemDeletedSnackbar": {
         "description": "Used whenever item gets deleted from the device or server, message in snackbar"
     },
