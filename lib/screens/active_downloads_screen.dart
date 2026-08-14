@@ -198,7 +198,7 @@ class DownloadsProgressLinearIndicator extends StatelessWidget {
             value: animatedValue,
             minHeight: minHeight,
             borderRadius: BorderRadius.circular(minHeight / 2),
-            semanticsLabel: 'Download Progress',
+            semanticsLabel: AppLocalizations.of(context)!.downloadProgress,
             semanticsValue: '${(animatedValue * 100).round()}%',
           ),
         );

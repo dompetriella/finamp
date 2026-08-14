@@ -1795,6 +1795,7 @@
     "fiveLatestAlbumsSetting": "Download 5 latest albums",
     "downloadTimeRemaining": "Time Remaining",
     "averageDownloadSpeed": "Average Download Speed", 
+    "downloadProgress": "Download Progress",
     "fiveLatestAlbumsSettingSubtitle": "Downloads will be removed as they age out.  Lock the download to prevent an album from being removed.",
     "cacheLibraryImagesSettings": "Cache current library images",
     "cacheLibraryImagesSettingsSubtitle": "All album, artist, genre, and playlist covers in the currently active library will be downloaded.",
