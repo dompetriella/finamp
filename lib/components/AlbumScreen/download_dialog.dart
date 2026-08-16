@@ -126,34 +126,40 @@ class _DownloadDialogState extends ConsumerState<DownloadDialog> {
   @override
   Widget build(BuildContext context) {
     assert(widget.children?.every((child) => BaseItemDtoType.fromItem(child) == BaseItemDtoType.track) ?? true);
-    String originalDescription = "null";
-    String transcodeDescription = "null";
-    var transcodeProfile = FinampSettingsHelper.finampSettings.downloadTranscodingProfile;
-    var originalProfile = DownloadProfile(transcodeCodec: FinampTranscodingCodec.original);
 
-    if (widget.children != null) {
-      final transcodedFileSize = widget.children!
-          .map(
-            (e) => e.mediaSources?.first.transcodedSize(
-              FinampSettingsHelper.finampSettings.downloadTranscodingProfile.bitrateChannels,
-            ),
-          )
-          .fold(0, (a, b) => a + (b ?? 0));
+    final formats = widget.children!.map((e) => e.mediaSources?.first.mediaStreams.first.codec).toSet();
+    // original file
+    final originalProfile = DownloadProfile(transcodeCodec: FinampTranscodingCodec.original);
+    final originalFileSize = widget.children?.map((e) => e.mediaSources?.first.size ?? 0).fold(0, (a, b) => a + b) ?? 0;
+    final originalFileSizeFormatted = FileSize.getSize(originalFileSize, precision: PrecisionValue.None);
 
-      transcodeDescription = FileSize.getSize(transcodedFileSize, precision: PrecisionValue.None);
+    // transcode
+    final transcodeProfile = FinampSettingsHelper.finampSettings.downloadTranscodingProfile;
+    final transcodedFileSize =
+        widget.children
+            ?.map(
+              (e) => e.mediaSources?.first.transcodedSize(
+                FinampSettingsHelper.finampSettings.downloadTranscodingProfile.bitrateChannels,
+              ),
+            )
+            .fold(0, (a, b) => a + (b ?? 0)) ??
+        0;
 
-      final originalFileSize = widget.children!.map((e) => e.mediaSources?.first.size ?? 0).fold(0, (a, b) => a + b);
+    // if (widget.children != null) {
+    //   ;
 
-      final originalFileSizeFormatted = FileSize.getSize(originalFileSize, precision: PrecisionValue.None);
+    //   transcodeDescription = FileSize.getSize(transcodedFileSize, precision: PrecisionValue.None);
 
-      originalDescription = originalFileSizeFormatted;
+    //   final originalFileSize = widget.children!.map((e) => e.mediaSources?.first.size ?? 0).fold(0, (a, b) => a + b);
 
-      final formats = widget.children!.map((e) => e.mediaSources?.first.mediaStreams.first.codec).toSet();
+    //   final originalFileSizeFormatted = FileSize.getSize(originalFileSize, precision: PrecisionValue.None);
 
-      if (formats.length == 1 && formats.first != null) {
-        originalDescription += " ${formats.first!.toUpperCase()}";
-      }
-    }
+    //   originalDescription = originalFileSizeFormatted;
+
+    //   if (formats.length == 1 && formats.first != null) {
+    //     originalDescription += " ${formats.first!.toUpperCase()}";
+    //   }
+    // }
 
     DownloadLocation? getFirstSelectedLocation() {
       FinampSettings settings = FinampSettingsHelper.finampSettings;
@@ -169,57 +175,98 @@ class _DownloadDialogState extends ConsumerState<DownloadDialog> {
       (element) => element.baseDirectory != DownloadLocationType.internalDocuments,
     );
 
+    final preferredDownloadLocation = getFirstSelectedLocation();
+
     return AlertDialog(
       title: Text(AppLocalizations.of(context)!.addDownloads),
       content: Column(
+        spacing: 16,
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // if (widget.needsTranscode)
+          //   DropdownButton<bool>(
+          //     hint: Text(AppLocalizations.of(context)!.transcodeHint),
+          //     isExpanded: true,
+          //     onChanged: (value) => setState(() {
+          //       transcode = value;
+          //     }),
+          //     value: transcode,
+          //     items: [
+          //       DropdownMenuItem<bool>(
+          //         value: true,
+          //         child: Text(
+          //           AppLocalizations.of(context)!.doTranscode(
+          //             transcodeProfile.bitrateKbps,
+          //             transcodeProfile.codec.name.toUpperCase(),
+          //             transcodeDescription,
+          //           ),
+          //         ),
+          //       ),
+          //       DropdownMenuItem<bool>(
+          //         value: false,
+          //         child: Text(AppLocalizations.of(context)!.dontTranscode(originalDescription)),
+          //       ),
+          //     ],
+          //   ),
+
           // Only show if there are multiple download locations
-          if (userSelectableDownloadLocations.length > 1)
-            DropdownButton<DownloadLocation>(
-              hint: Text(AppLocalizations.of(context)!.location),
-              isExpanded: true,
-              onChanged: (value) => setState(() {
-                selectedDownloadLocation = value;
-              }),
-              value: getFirstSelectedLocation(),
-              items: userSelectableDownloadLocations
-                  .map(
-                    (downloadLocation) =>
-                        DropdownMenuItem<DownloadLocation>(value: downloadLocation, child: Text(downloadLocation.name)),
-                  )
-                  .toList(),
-            ),
-          if (widget.needsTranscode)
-            DropdownButton<bool>(
-              hint: Text(AppLocalizations.of(context)!.transcodeHint),
-              isExpanded: true,
-              onChanged: (value) => setState(() {
-                transcode = value;
-              }),
-              value: transcode,
-              items: [
-                DropdownMenuItem<bool>(
-                  value: true,
-                  child: Text(
-                    AppLocalizations.of(context)!.doTranscode(
-                      transcodeProfile.bitrateKbps,
-                      transcodeProfile.codec.name.toUpperCase(),
-                      transcodeDescription,
-                    ),
-                  ),
+          // if (userSelectableDownloadLocations.length > 1)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              spacing: 16,
+              children: [
+                DropdownMenu(
+                  label: Text('Download Location'),
+                  initialSelection: preferredDownloadLocation,
+                  onSelected: (value) => setState(() {
+                    selectedDownloadLocation = value;
+                  }),
+                  expandedInsets: EdgeInsets.zero,
+                  dropdownMenuEntries: userSelectableDownloadLocations
+                      .map(
+                        (downloadLocation) =>
+                            DropdownMenuEntry<DownloadLocation>(value: downloadLocation, label: downloadLocation.name),
+                      )
+                      .toList(),
                 ),
-                DropdownMenuItem<bool>(
-                  value: false,
-                  child: Text(AppLocalizations.of(context)!.dontTranscode(originalDescription)),
-                ),
+                Text('Path: ${preferredDownloadLocation?.currentPath}'),
               ],
             ),
+          ),
+
+          // if (widget.needsTranscode)
+          CheckboxListTile(
+            title: Text('Transcode files?'),
+            value: transcode,
+            isThreeLine: true,
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              // children: [Text('${widget.trackCount} tracks'), Text('File type: FLAC'), Text('Size: 1.03GB')],
+              children: [
+                Text('${widget.trackCount} tracks'),
+                Text('${transcodeProfile.codec.name.toUpperCase()}'),
+                Text(transcode ?? false ? '${transcodeProfile.bitrateKbps}' : '${originalProfile.bitrateKbps}'),
+              ],
+            ),
+            onChanged: (value) => setState(() {
+              transcode = value;
+            }),
+            tristate: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+
           if ((widget.trackCount ?? 0) >= FinampSettingsHelper.finampSettings.downloadSizeWarningCutoff)
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0),
-              child: Text(AppLocalizations.of(context)!.largeDownloadWarning(widget.trackCount!)),
+            Center(
+              child: Text(
+                AppLocalizations.of(context)!.largeDownloadWarning(widget.trackCount!),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
         ],
       ),
