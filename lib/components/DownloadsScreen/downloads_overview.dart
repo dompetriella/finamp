@@ -65,7 +65,7 @@ class DownloadsOverview extends StatelessWidget {
               final nodesSyncing = countSnapshot.data?["sync"] ?? 0;
 
               return Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                 child: Column(
                   spacing: 16,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -215,12 +215,12 @@ class _DownloadHeader extends StatelessWidget {
         Row(
           spacing: 8,
           children: [
-            Text('$totalDownloadCount', style: TextStyle(fontSize: 64, fontWeight: FontWeight.bold)),
-            Icon(Icons.downloading, size: 56),
+            Text('$totalDownloadCount', style: TextStyle(fontSize: 56)),
+            Icon(Icons.downloading, size: 48),
           ],
         ),
 
-        Text('$trackCount tracks, $imageCount images', style: TextStyle(fontSize: 16)),
+        Text('$trackCount tracks, $imageCount images'),
         // Text(AppLocalizations.of(context)!.downloadCount(totalDownloadCount)),
         // Text(
         //   AppLocalizations.of(context)!.downloadedCountUnified(
@@ -298,7 +298,7 @@ class _DownloadAndSyncProgressIndicatorState extends ConsumerState<_DownloadAndS
         children: [
           Column(
             mainAxisSize: MainAxisSize.min,
-            spacing: 24,
+            spacing: 16,
             children: [
               SizedBox.square(
                 dimension: 48,
@@ -321,7 +321,7 @@ class _DownloadAndSyncProgressIndicatorState extends ConsumerState<_DownloadAndS
                   },
                 ),
               ),
-              Text(statusText, style: TextStyle(fontSize: 16)),
+              Text(statusText),
             ],
           ),
         ],
