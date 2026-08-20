@@ -67,7 +67,6 @@ class ActiveDownloadsScreen extends ConsumerWidget {
             } else {
               return PaddedCustomScrollview(
                 slivers: [
-                  _AllDownloadsHeader(downloadsService: downloadsService),
                   if (snapshot.data![0].isNotEmpty)
                     ActiveDownloadList(
                       state: DownloadItemState.syncFailed,
@@ -107,67 +106,6 @@ class ActiveDownloadsScreen extends ConsumerWidget {
             return const Center(child: CircularProgressIndicator.adaptive());
           }
         },
-      ),
-    );
-  }
-}
-
-class _AllDownloadsHeader extends ConsumerStatefulWidget {
-  const _AllDownloadsHeader({super.key, required this.downloadsService});
-
-  final DownloadsService downloadsService;
-
-  @override
-  ConsumerState<_AllDownloadsHeader> createState() => _AllDownloadsHeaderState();
-}
-
-class _AllDownloadsHeaderState extends ConsumerState<_AllDownloadsHeader> {
-  // Size of the current batch, captured once and held until the queue drains.
-  int? _batchTotal;
-
-  @override
-  Widget build(BuildContext context) {
-    final downloadStatuses = widget.downloadsService.downloadStatuses;
-    final allDownloadsProgress = ref.watch(widget.downloadsService.allProgressProvider);
-
-    final downloading = downloadStatuses[DownloadItemState.downloading] ?? 0;
-    final enqueued = downloadStatuses[DownloadItemState.enqueued] ?? 0;
-    final remaining = downloading + enqueued;
-
-    final totalDownloadSpeed = allDownloadsProgress.values
-        .where((e) => e.hasNetworkSpeed)
-        .fold(0.0, (sum, e) => sum + e.networkSpeed);
-
-    final averageDownloadSpeed = allDownloadsProgress.isNotEmpty
-        ? totalDownloadSpeed / allDownloadsProgress.length
-        : 0.0;
-
-    final avgSpeedAsString = widget.downloadsService.getNetworkSpeedAsString(
-      networkSpeed: averageDownloadSpeed,
-      decimals: 3,
-    );
-
-    if (remaining == 0) {
-      _batchTotal = null;
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
-    }
-
-    // First frame of a batch: lock in its size. If more items get queued
-    // mid-batch, grow the total rather than letting progress exceed 100%.
-    if (_batchTotal == null || remaining > _batchTotal!) {
-      _batchTotal = remaining;
-    }
-
-    final completed = _batchTotal! - remaining;
-    final overallProgress = completed / _batchTotal!;
-
-    return PinnedHeaderSliver(
-      child: Column(
-        spacing: 8,
-        children: [
-          DownloadsProgressLinearIndicator(progressValue: overallProgress, widthFactor: 3 / 4, minHeight: 16),
-          Text('${AppLocalizations.of(context)!.averageDownloadSpeed}: $avgSpeedAsString'),
-        ],
       ),
     );
   }
