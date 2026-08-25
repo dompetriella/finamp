@@ -80,31 +80,6 @@ class DownloadsOverview extends StatelessWidget {
                           trackCount: trackCount,
                           imageCount: imageCount,
                         ),
-
-                        // Padding(
-                        //   padding: const EdgeInsets.only(left: 50),
-                        //   child: Column(
-                        //     crossAxisAlignment: CrossAxisAlignment.end,
-                        //     children: [
-                        //       Text(
-                        //         AppLocalizations.of(context)!.dlComplete(totalDownloadComplete),
-                        //         style: TextStyle(color: Theme.of(context).colorScheme.primary),
-                        //       ),
-                        //       Text(
-                        //         AppLocalizations.of(context)!.dlFailed(totalDownloadFailed),
-                        //         style: TextStyle(color: Theme.of(context).colorScheme.error),
-                        //       ),
-                        //       Text(
-                        //         AppLocalizations.of(context)!.dlEnqueued(downloadEnqueued),
-                        //         style: TextStyle(color: Theme.of(context).colorScheme.secondary),
-                        //       ),
-                        //       Text(
-                        //         AppLocalizations.of(context)!.dlRunning(downloading),
-                        //         style: TextStyle(color: Theme.of(context).colorScheme.secondary),
-                        //       ),
-                        //     ],
-                        //   ),
-                        // ),
                         _DownloadAndSyncProgressIndicator(
                           downloadsService: downloadsService,
                           nodesSyncing: nodesSyncing,
@@ -221,16 +196,6 @@ class _DownloadHeader extends StatelessWidget {
         ),
 
         Text('$trackCount tracks, $imageCount images'),
-        // Text(AppLocalizations.of(context)!.downloadCount(totalDownloadCount)),
-        // Text(
-        //   AppLocalizations.of(context)!.downloadedCountUnified(
-        //     countSnapshot.data?["track"] ?? -1,
-        //     countSnapshot.data?["image"] ?? -1,
-        //     countSnapshot.data?["sync"] ?? -1,
-        //     countSnapshot.data?[repairStepTrackingName] ?? 0,
-        //   ),
-        //   style: TextStyle(color: Theme.of(context).colorScheme.secondary),
-        // ),
       ],
     );
   }
