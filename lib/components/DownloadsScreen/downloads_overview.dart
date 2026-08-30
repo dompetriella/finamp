@@ -1,8 +1,6 @@
 import 'dart:async';
 
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:finamp/l10n/app_localizations.dart';
-import 'package:finamp/screens/active_downloads_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
@@ -41,13 +39,13 @@ class DownloadsOverview extends StatelessWidget {
           initialData: downloadsService.downloadStatuses,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              final downloading = (snapshot.data?[DownloadItemState.downloading] ?? 0);
-              final downloadComplete = (snapshot.data?[DownloadItemState.complete] ?? 0);
-              final needsRedownloadComplete = (snapshot.data?[DownloadItemState.needsRedownloadComplete] ?? 0);
-              final needsRedownload = (snapshot.data?[DownloadItemState.needsRedownload] ?? 0);
-              final downloadFailed = (snapshot.data?[DownloadItemState.failed] ?? 0);
-              final downloadEnqueued = (snapshot.data?[DownloadItemState.enqueued] ?? 0);
-              final downloadSyncFailed = (snapshot.data?[DownloadItemState.syncFailed] ?? 0);
+              final downloading = snapshot.data?[DownloadItemState.downloading] ?? 0;
+              final downloadComplete = snapshot.data?[DownloadItemState.complete] ?? 0;
+              final needsRedownloadComplete = snapshot.data?[DownloadItemState.needsRedownloadComplete] ?? 0;
+              final needsRedownload = snapshot.data?[DownloadItemState.needsRedownload] ?? 0;
+              final downloadFailed = snapshot.data?[DownloadItemState.failed] ?? 0;
+              final downloadEnqueued = snapshot.data?[DownloadItemState.enqueued] ?? 0;
+              final downloadSyncFailed = snapshot.data?[DownloadItemState.syncFailed] ?? 0;
 
               final totalDownloadCount =
                   downloading +
