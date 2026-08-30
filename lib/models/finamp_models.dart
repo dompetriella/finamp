@@ -127,7 +127,14 @@ class DefaultSettings {
   // Ideally the maximum gain in each library should be fetched from the server, and this volume should be adjusted accordingly to be the exact inverse, so that the quietest track in the library plays at 100% volume, and only louder tracks get their volume reduced
   static const volumeNormalizationIOSBaseGain = 6.0;
   static const volumeNormalizationMode = VolumeNormalizationMode.hybrid;
-  static const contentViewType = ContentViewType.list;
+  static const perTabContentViewType = {
+    ContentType.albums: ContentViewType.grid,
+    ContentType.genericArtists: ContentViewType.list,
+    ContentType.albumArtists: ContentViewType.list,
+    ContentType.performingArtists: ContentViewType.list,
+    ContentType.playlists: ContentViewType.list,
+    ContentType.genres: ContentViewType.list,
+  };
   static const playbackSpeedVisibility = PlaybackSpeedVisibility.automatic;
   static const showTextOnGridView = true;
   static const sleepTimerDurationSeconds = 60 * 30;
@@ -310,6 +317,7 @@ class DefaultSettings {
   static int get gridImageSize => isDesktop ? gridImageSizeDesktop : gridImageSizeMobile;
   static const useAndroidGainEffect = true;
   static const ClientCertificate? clientCertificate = null;
+  static const showQuickActionsBanner = true;
 }
 
 @HiveType(typeId: 28)
@@ -329,7 +337,6 @@ class FinampSettings {
     this.volumeNormalizationActive = DefaultSettings.volumeNormalizationActive,
     this.volumeNormalizationIOSBaseGain = DefaultSettings.volumeNormalizationIOSBaseGain,
     this.volumeNormalizationMode = DefaultSettings.volumeNormalizationMode,
-    this.contentViewType = DefaultSettings.contentViewType,
     this.playbackSpeedVisibility = DefaultSettings.playbackSpeedVisibility,
     this.contentGridViewCrossAxisCountPortrait,
     this.contentGridViewCrossAxisCountLandscape,
@@ -456,6 +463,9 @@ class FinampSettings {
     required this.homeScreenImageSize,
     this.useAndroidGainEffect = DefaultSettings.useAndroidGainEffect,
     required this.deviceId,
+    this.clientCertificate = DefaultSettings.clientCertificate,
+    this.showQuickActionsBanner = DefaultSettings.showQuickActionsBanner,
+    this.perTabContentViewType = DefaultSettings.perTabContentViewType,
   });
 
   @HiveField(0, defaultValue: DefaultSettings.isOffline)
@@ -496,8 +506,9 @@ class FinampSettings {
   int trackShuffleItemCount;
 
   /// The content view type used by the music screen.
-  @HiveField(10, defaultValue: DefaultSettings.contentViewType)
-  ContentViewType contentViewType;
+  @HiveField(10)
+  @Deprecated("Use perTabContentViewType")
+  ContentViewType? contentViewType;
 
   /// Amount of grid tiles to use per-row when portrait.
   @HiveField(11)
@@ -935,7 +946,7 @@ class FinampSettings {
   int homeScreenImageSize;
 
   @HiveField(151, defaultValue: DefaultSettings.clientCertificate)
-  ClientCertificate? clientCertificate = DefaultSettings.clientCertificate;
+  ClientCertificate? clientCertificate;
 
   /// Unique ID that stays the same for an install but may change across reinstalls
   /// Used to identify client activity within Jellyfin
@@ -948,6 +959,13 @@ class FinampSettings {
   /// release builds otherwise cap at INFO.
   @HiveField(153, defaultValue: DefaultSettings.verboseLogging)
   bool verboseLogging = DefaultSettings.verboseLogging;
+
+  @HiveField(154, defaultValue: DefaultSettings.showQuickActionsBanner)
+  bool showQuickActionsBanner;
+
+  @HiveField(155, defaultValue: DefaultSettings.perTabContentViewType)
+  @SettingsHelperMap("tabContentType")
+  Map<ContentType, ContentViewType> perTabContentViewType;
 
   static Future<FinampSettings> create() async {
     final downloadLocation = await DownloadLocation.create(
@@ -1140,7 +1158,7 @@ enum ContentType {
   @HiveField(7)
   albumArtists(BaseItemDtoType.artist),
   @HiveField(8)
-  inPlaylist(BaseItemDtoType.track),
+  inPlaylistOrAlbum(BaseItemDtoType.track),
   @HiveField(9)
   mixed(null),
   @HiveField(10)
@@ -1177,7 +1195,7 @@ enum ContentType {
         return l10n.performingArtists;
       case ContentType.albumArtists:
         return l10n.albumArtists;
-      case ContentType.inPlaylist:
+      case ContentType.inPlaylistOrAlbum:
         return l10n.inPlaylist;
       case ContentType.mixed:
         return l10n.inCollection;
@@ -1219,7 +1237,7 @@ enum ContentType {
     ContentType.home => true,
     ContentType.performingArtists => true,
     ContentType.albumArtists => true,
-    ContentType.inPlaylist => false,
+    ContentType.inPlaylistOrAlbum => false,
     ContentType.mixed => false,
     ContentType.inPerformingArtistAlbums => false,
     ContentType.inAlbumArtistAlbums => false,
@@ -1234,7 +1252,7 @@ enum ContentType {
     ContentType.home => false,
     ContentType.performingArtists => true,
     ContentType.albumArtists => true,
-    ContentType.inPlaylist => false,
+    ContentType.inPlaylistOrAlbum => false,
     ContentType.mixed => false,
     ContentType.inPerformingArtistAlbums => false,
     ContentType.inAlbumArtistAlbums => false,
@@ -1250,7 +1268,7 @@ enum ContentType {
     ContentType.home => false,
     ContentType.performingArtists => true,
     ContentType.albumArtists => true,
-    ContentType.inPlaylist => false,
+    ContentType.inPlaylistOrAlbum => false,
     ContentType.mixed => false,
     ContentType.inPerformingArtistAlbums => false,
     ContentType.inAlbumArtistAlbums => false,
@@ -1705,6 +1723,7 @@ class DownloadItem extends DownloadStub {
         // Not all BaseItemDto are requested with mediaSources, mediaStreams or childCount.  Do not
         // overwrite with null if the new item does not have them.
         item.mediaSources ??= baseItem?.mediaSources;
+        item.people ??= baseItem?.people;
         item.sortName ??= baseItem?.sortName;
       }
       assert(
@@ -1717,7 +1736,7 @@ class DownloadItem extends DownloadStub {
         if (viewId == null || viewId == this.viewId) {
           if (item == null || baseItem!.mostlyEqual(item)) {
             var equal = const DeepCollectionEquality().equals;
-            if (equal(newOrderedChildren, orderedChildren)) {
+            if (newOrderedChildren == null || equal(newOrderedChildren, orderedChildren)) {
               return null;
             }
           }
@@ -3473,6 +3492,9 @@ class SleepTimer {
 
   final sleepTimerLogger = Logger("SleepTimer");
 
+  /// Identifier of the last track that was counted towards the timer, to diagnose unexpected counter jumps
+  String? _lastCountedTrackId;
+
   SleepTimer(this.secondsLength, this.tracksLength);
 
   Future<void> start(Function callback) async {
@@ -3481,6 +3503,10 @@ class SleepTimer {
     _callback = callback;
 
     remainingNotifier.value = secondsLength + tracksLength;
+    sleepTimerLogger.info(
+      "Sleep timer started for ${Duration(seconds: secondsLength)}, $tracksLength tracks "
+      "(deadline: ${_startTime!.add(totalDuration)}, now: $_startTime)",
+    );
 
     if (secondsLength > 0) {
       _timer = Timer.periodic(const Duration(seconds: 1), (t) async {
@@ -3492,7 +3518,7 @@ class SleepTimer {
           t.cancel();
           _timer = null;
           if (tracksLength > 0) {
-            sleepTimerLogger.info("Sleep timer switching to track count");
+            sleepTimerLogger.info("Sleep timer duration finished, switching to track count ($tracksLength)");
             _tracksRemaining = tracksLength;
           } else {
             sleepTimerLogger.info("Sleep timer duration finished");
@@ -3501,17 +3527,42 @@ class SleepTimer {
         }
       });
     } else {
+      sleepTimerLogger.info("Sleep timer has no duration phase, starting directly with track count ($tracksLength)");
       _tracksRemaining = tracksLength;
     }
-
-    sleepTimerLogger.info("Sleep timer started for ${Duration(seconds: secondsLength)}, $tracksLength tracks");
   }
 
-  void onTrackCompleted() {
-    if (_tracksRemaining == null) return;
+  void onTrackCompleted({required bool trackEndedNormally, MediaItem? track}) {
+    if (_tracksRemaining == null) {
+      sleepTimerLogger.fine(
+        "Ignoring track completion"
+        "(${trackEndedNormally ? "end" : "skip"})"
+        "${track?.id != null ? ", id: $track?.id" : ""}"
+        "${track?.title != null ? ", name: \"${track?.title}\"" : ""}"
+        ": no track-count phase active",
+      );
+      return;
+    }
     assert(_startTime != null && _callback != null);
-    _tracksRemaining = _tracksRemaining! - 1;
+
+    final previousTracks = _tracksRemaining!;
+    _tracksRemaining = previousTracks - 1;
     remainingNotifier.value = _tracksRemaining!;
+
+    // Warn about repeated decrements for the same track
+    final sameTrackAsLastTime = _lastCountedTrackId != null && _lastCountedTrackId == track?.id;
+    _lastCountedTrackId = track?.id;
+
+    sleepTimerLogger.info(
+      "Sleep timer counted completed track"
+      "(${trackEndedNormally ? "end" : "skip"})"
+      "${track?.id != null ? ", id: $track?.id" : ""}"
+      "${track?.title != null ? ", name: \"${track?.title}\"" : ""}"
+      ": $previousTracks -> $_tracksRemaining remaining",
+    );
+    if (sameTrackAsLastTime) {
+      sleepTimerLogger.warning("Sleep timer counted the same track twice in a row");
+    }
     if (_tracksRemaining! <= 0) {
       _tracksRemaining = null;
       sleepTimerLogger.info("Sleep timer tracks finished");
@@ -3520,12 +3571,18 @@ class SleepTimer {
   }
 
   void cancel() {
+    final hadDurationPhase = _timer != null;
+    final hadRemainingTracks = _tracksRemaining;
     _startTime = null;
     _timer?.cancel();
     _timer = null;
     _tracksRemaining = null;
     remainingNotifier.value = 0;
-    sleepTimerLogger.info("Sleep timer cancelled");
+    sleepTimerLogger.info(
+      "Sleep timer cancelled"
+      "${hadDurationPhase ? " during duration phase" : ""}"
+      "${hadRemainingTracks != null ? " with $hadRemainingTracks tracks remaining" : ""}",
+    );
   }
 
   Duration get totalDuration => Duration(seconds: secondsLength);
@@ -4620,6 +4677,9 @@ class SortAndFilterConfiguration {
       filters.firstWhereOrNull((x) => x.type == ItemFilterType.artistFilter)?.extraBaseItem;
 
   bool get favoritesFilter => filters.firstWhereOrNull((x) => x.type == ItemFilterType.isFavorite) != null;
+
+  bool get onlyShowFullyDownloadedFilter =>
+      filters.firstWhereOrNull((x) => x.type == ItemFilterType.isFullyDownloaded) != null;
 
   SortAndFilterConfiguration copyWith({
     SortBy? sortBy,
