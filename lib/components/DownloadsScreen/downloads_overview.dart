@@ -135,6 +135,7 @@ class _DownloadInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Wrap(
       spacing: 8,
       runSpacing: 4,
@@ -142,25 +143,25 @@ class _DownloadInfoSection extends StatelessWidget {
         _DownloadInfoChip(
           icon: Icons.check,
           amount: totalDownloadComplete,
-          title: 'Completed',
+          label: l10n.downloadChipCompleted(totalDownloadComplete),
           themeColor: Theme.of(context).colorScheme.primary,
         ),
         _DownloadInfoChip(
           icon: Icons.download,
           amount: downloading,
-          title: 'Downloading',
+          label: l10n.downloadChipDownloading(downloading),
           themeColor: Theme.of(context).colorScheme.secondary,
         ),
         _DownloadInfoChip(
           icon: Icons.menu,
           amount: downloadEnqueued,
-          title: 'Enqueued',
+          label: l10n.downloadChipEnqueued(downloadEnqueued),
           themeColor: Theme.of(context).colorScheme.tertiary,
         ),
         _DownloadInfoChip(
           icon: Icons.error,
           amount: totalDownloadFailed,
-          title: 'Failed',
+          label: l10n.downloadChipFailed(totalDownloadFailed),
           themeColor: Theme.of(context).colorScheme.error,
         ),
       ],
@@ -193,7 +194,7 @@ class _DownloadHeader extends StatelessWidget {
           ],
         ),
 
-        Text('$trackCount tracks, $imageCount images'),
+        Text(AppLocalizations.of(context)!.downloadedTracksAndImageCount(trackCount, imageCount)),
       ],
     );
   }
@@ -228,6 +229,7 @@ class _DownloadAndSyncProgressIndicatorState extends ConsumerState<_DownloadAndS
     final allDownloadsProgress = ref.watch(widget.downloadsService.allProgressProvider);
     final isSyncing = widget.downloadsService.syncBuffer.isRunning;
     final isDownloading = allDownloadsProgress.isNotEmpty;
+    final l10n = AppLocalizations.of(context)!;
 
     final DownloadAndSyncState state;
     if (isSyncing) {
@@ -249,10 +251,10 @@ class _DownloadAndSyncProgressIndicatorState extends ConsumerState<_DownloadAndS
     final progressAsPercent = progress * 100;
 
     final statusText = switch (state) {
-      DownloadAndSyncState.presync => 'Syncing',
-      DownloadAndSyncState.syncing => 'Syncing: ${widget.nodesSyncing} nodes',
-      DownloadAndSyncState.downloading => 'Downloading: ${progressAsPercent.toStringAsFixed(1)}%',
-      DownloadAndSyncState.complete => 'Downloads Ready',
+      DownloadAndSyncState.presync => l10n.downloadSyncStatusPresync,
+      DownloadAndSyncState.syncing => l10n.downloadSyncStatusSyncing(widget.nodesSyncing),
+      DownloadAndSyncState.downloading => l10n.downloadSyncStatusDownloading(progressAsPercent.toStringAsFixed(1)),
+      DownloadAndSyncState.complete => l10n.downloadSyncStatusComplete,
     };
 
     return Expanded(
@@ -296,14 +298,14 @@ class _DownloadAndSyncProgressIndicatorState extends ConsumerState<_DownloadAndS
 class _DownloadInfoChip extends StatelessWidget {
   const _DownloadInfoChip({
     required this.amount,
-    required this.title,
+    required this.label,
     required this.icon,
     required this.themeColor,
     super.key,
   });
 
   final int amount;
-  final String title;
+  final String label;
   final IconData icon;
   final Color themeColor;
 
@@ -313,7 +315,7 @@ class _DownloadInfoChip extends StatelessWidget {
 
     return Chip(
       avatar: Icon(icon, color: themeColor),
-      label: Text('$amount $title'),
+      label: Text(label),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadiusGeometry.circular(12),
         side: BorderSide(
