@@ -109,9 +109,6 @@ class FinampSettingsAdapter extends TypeAdapter<FinampSettings> {
         volumeNormalizationMode: fields[33] == null
             ? VolumeNormalizationMode.hybrid
             : fields[33] as VolumeNormalizationMode,
-        contentViewType: fields[10] == null
-            ? ContentViewType.list
-            : fields[10] as ContentViewType,
         playbackSpeedVisibility: fields[57] == null
             ? PlaybackSpeedVisibility.automatic
             : fields[57] as PlaybackSpeedVisibility,
@@ -450,9 +447,26 @@ class FinampSettingsAdapter extends TypeAdapter<FinampSettings> {
             : (fields[150] as num).toInt(),
         useAndroidGainEffect: fields[149] == null ? true : fields[149] as bool,
         deviceId: fields[152] == null ? 'unset' : fields[152] as String,
+        clientCertificate: fields[151] == null
+            ? DefaultSettings.clientCertificate
+            : fields[151] as ClientCertificate?,
+        showQuickActionsBanner: fields[154] == null
+            ? true
+            : fields[154] as bool,
+        perTabContentViewType: fields[155] == null
+            ? {
+                ContentType.albums: ContentViewType.grid,
+                ContentType.genericArtists: ContentViewType.list,
+                ContentType.albumArtists: ContentViewType.list,
+                ContentType.performingArtists: ContentViewType.list,
+                ContentType.playlists: ContentViewType.list,
+                ContentType.genres: ContentViewType.list,
+              }
+            : (fields[155] as Map).cast<ContentType, ContentViewType>(),
       )
       ..sortBy = fields[7] as SortBy?
       ..sortOrder = fields[8] as SortOrder?
+      ..contentViewType = fields[10] as ContentViewType?
       ..disableGesture = fields[19] == null ? false : fields[19] as bool
       ..showFastScroller = fields[25] == null ? true : fields[25] as bool
       ..defaultDownloadLocation = fields[58] as String?
@@ -466,14 +480,13 @@ class FinampSettingsAdapter extends TypeAdapter<FinampSettings> {
       ..radioEnabled = fields[140] == null ? false : fields[140] as bool
       ..radioMode = fields[141] == null
           ? RadioMode.similar
-          : fields[141] as RadioMode
-      ..clientCertificate = fields[151] as ClientCertificate?;
+          : fields[141] as RadioMode;
   }
 
   @override
   void write(BinaryWriter writer, FinampSettings obj) {
     writer
-      ..writeByte(147)
+      ..writeByte(149)
       ..writeByte(0)
       ..write(obj.isOffline)
       ..writeByte(1)
@@ -767,7 +780,11 @@ class FinampSettingsAdapter extends TypeAdapter<FinampSettings> {
       ..writeByte(152)
       ..write(obj.deviceId)
       ..writeByte(153)
-      ..write(obj.verboseLogging);
+      ..write(obj.verboseLogging)
+      ..writeByte(154)
+      ..write(obj.showQuickActionsBanner)
+      ..writeByte(155)
+      ..write(obj.perTabContentViewType);
   }
 
   @override
@@ -1908,7 +1925,7 @@ class ContentTypeAdapter extends TypeAdapter<ContentType> {
       case 7:
         return ContentType.albumArtists;
       case 8:
-        return ContentType.inPlaylist;
+        return ContentType.inPlaylistOrAlbum;
       case 9:
         return ContentType.mixed;
       case 10:
@@ -1939,7 +1956,7 @@ class ContentTypeAdapter extends TypeAdapter<ContentType> {
         writer.writeByte(6);
       case ContentType.albumArtists:
         writer.writeByte(7);
-      case ContentType.inPlaylist:
+      case ContentType.inPlaylistOrAlbum:
         writer.writeByte(8);
       case ContentType.mixed:
         writer.writeByte(9);
@@ -9554,7 +9571,7 @@ const _$ContentTypeEnumMap = {
   ContentType.home: 'home',
   ContentType.performingArtists: 'performingArtists',
   ContentType.albumArtists: 'albumArtists',
-  ContentType.inPlaylist: 'inPlaylist',
+  ContentType.inPlaylistOrAlbum: 'inPlaylistOrAlbum',
   ContentType.mixed: 'mixed',
   ContentType.inPerformingArtistAlbums: 'inPerformingArtistAlbums',
   ContentType.inAlbumArtistAlbums: 'inAlbumArtistAlbums',
@@ -9778,6 +9795,7 @@ const _$SortByEnumMap = {
   SortBy.revenue: 'revenue',
   SortBy.runtime: 'runtime',
   SortBy.defaultOrder: 'defaultOrder',
+  SortBy.inAlbumOrPlaylist: 'inAlbumOrPlaylist',
 };
 
 const _$SortOrderEnumMap = {

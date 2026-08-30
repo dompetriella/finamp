@@ -16,8 +16,10 @@ import 'package:finamp/models/jellyfin_models.dart';
 import 'package:finamp/models/locale_adapter.dart';
 import 'package:finamp/models/music_models.dart';
 import 'package:finamp/screens/accessibility_settings_screen.dart';
+import 'package:finamp/screens/advanced_login_options_screen.dart';
 import 'package:finamp/screens/album_settings_screen.dart';
 import 'package:finamp/screens/artist_settings_screen.dart';
+import 'package:finamp/screens/content_view_type_settings_screen.dart';
 import 'package:finamp/screens/downloads_settings_screen.dart';
 import 'package:finamp/screens/genre_settings_screen.dart';
 import 'package:finamp/screens/home_screen_settings_screen.dart';
@@ -30,6 +32,7 @@ import 'package:finamp/screens/playback_reporting_settings_screen.dart';
 import 'package:finamp/screens/player_settings_screen.dart';
 import 'package:finamp/screens/playlist_edit_screen.dart';
 import 'package:finamp/screens/queue_restore_screen.dart';
+import 'package:finamp/screens/quick_settings_screen.dart';
 import 'package:finamp/services/album_image_provider.dart';
 import 'package:finamp/services/android_auto_helper.dart';
 import 'package:finamp/services/audio_service_smtc.dart';
@@ -344,7 +347,7 @@ Future<void> _setupProviders() async {
   var container = ProviderContainer(observers: [FinampProviderObserver()]);
   GetIt.instance.registerSingleton<ProviderContainer>(container);
   // Make sure that finampSettingsProvider always has a value available
-  container.listen(finampSettingsProvider, (_, __) {});
+  container.listen(finampSettingsProvider, (_, _) {});
   await container.read(finampSettingsProvider.future);
 
   await initImageCache();
@@ -536,10 +539,10 @@ void _migrateHomescreen() {
     changed = true;
   }
 
-  if (!finampSettings.tabSortBy.keys.contains(ContentType.inPlaylist)) {
-    finampSettings.tabSortBy[ContentType.inPlaylist] =
+  if (!finampSettings.tabSortBy.keys.contains(ContentType.inPlaylistOrAlbum)) {
+    finampSettings.tabSortBy[ContentType.inPlaylistOrAlbum] =
         finampSettings.playlistTracksSortBy ?? SortAndFilterConfiguration.defaultInAlbumSort.sortBy;
-    finampSettings.tabSortOrder[ContentType.inPlaylist] =
+    finampSettings.tabSortOrder[ContentType.inPlaylistOrAlbum] =
         finampSettings.playlistTracksSortOrder ?? SortAndFilterConfiguration.defaultInAlbumSort.sortOrder;
     changed = true;
   }
@@ -640,6 +643,14 @@ void _migrateSortOptions() {
     for (var type in ContentType.values.where((x) => x.isTab)) {
       finampSettings.tabSortOrder[type] = finampSettings.sortOrder!;
     }
+    changed = true;
+  }
+
+  if (finampSettings.contentViewType != null) {
+    for (var type in customContentViewTypes) {
+      finampSettings.perTabContentViewType[type] = finampSettings.contentViewType!;
+    }
+    finampSettings.contentViewType = null;
     changed = true;
   }
 
@@ -957,6 +968,7 @@ class FinampApp extends ConsumerWidget {
       routes: {
         SplashScreen.routeName: (context) => const SplashScreen(),
         LoginScreen.routeName: (context) => const LoginScreen(),
+        AdvancedLoginOptionsScreen.routeName: (context) => const AdvancedLoginOptionsScreen(),
         ViewSelector.routeName: (context) => const ViewSelector(),
         MusicScreen.routeName: (context) => const MusicScreen(),
         AlbumScreen.routeName: (context) => const AlbumScreen(),
@@ -979,6 +991,7 @@ class FinampApp extends ConsumerWidget {
         VolumeNormalizationSettingsScreen.routeName: (context) => const VolumeNormalizationSettingsScreen(),
         InteractionSettingsScreen.routeName: (context) => const InteractionSettingsScreen(),
         TabsSettingsScreen.routeName: (context) => const TabsSettingsScreen(),
+        ContentViewTypeSettingsScreen.routeName: (context) => const ContentViewTypeSettingsScreen(),
         LayoutSettingsScreen.routeName: (context) => const LayoutSettingsScreen(),
         CustomizationSettingsScreen.routeName: (context) => const CustomizationSettingsScreen(),
         PlayerSettingsScreen.routeName: (context) => const PlayerSettingsScreen(),
@@ -991,6 +1004,7 @@ class FinampApp extends ConsumerWidget {
         AccessibilitySettingsScreen.routeName: (context) => const AccessibilitySettingsScreen(),
         PlaylistEditScreen.routeName: (context) =>
             PlaylistEditScreen(playlist: ModalRoute.settingsOf(context)!.arguments as BaseItemDto),
+        QuickSettingsScreen.routeName: (context) => const QuickSettingsScreen(),
         //ShowAllScreen.routeName: (context) => const ShowAllScreen(),
       },
       initialRoute: SplashScreen.routeName,

@@ -123,7 +123,12 @@ class FeatureState {
       final people = metadata?.people ?? currentTrack?.baseItem.people;
       if (feature == FinampFeatureChipType.additionalPeople && (people?.isNotEmpty ?? false)) {
         people?.forEach((person) {
-          features.add(FeatureProperties(type: feature, text: "${person.role ?? person.type}: ${person.name}"));
+          final roleOrType = (person.role?.isNotEmpty ?? false)
+              ? person.role
+              : ((person.type?.isNotEmpty ?? false) ? person.type : null);
+          if (roleOrType != null) {
+            features.add(FeatureProperties(type: feature, text: "$roleOrType: ${person.name}"));
+          }
         });
       }
 
@@ -210,8 +215,6 @@ class FeatureChips extends ConsumerWidget {
 
     final metadata = ref.watch(currentTrackMetadataProvider).unwrapPrevious();
 
-    // TODO refactor this to not rebuild on every settings change
-    final settings = ref.watch(finampSettingsProvider).requireValue;
     return StreamBuilder<FinampQueueItem?>(
       stream: queueService.getCurrentTrackStream(),
       builder: (context, snapshot) {

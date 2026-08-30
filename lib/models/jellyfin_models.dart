@@ -2212,6 +2212,7 @@ class BaseItemDto with RunTimeTickDuration {
         other.blurHash == blurHash &&
         other.mediaSources?.length == mediaSources?.length &&
         other.mediaStreams?.length == mediaStreams?.length &&
+        other.people?.length == people?.length &&
         other.normalizationGain == normalizationGain &&
         other.albumNormalizationGain == albumNormalizationGain &&
         other.playlistItemId == playlistItemId;
@@ -3282,7 +3283,9 @@ enum SortBy {
   @HiveField(14)
   runtime,
   @HiveField(15)
-  defaultOrder;
+  defaultOrder,
+  @HiveField(16)
+  inAlbumOrPlaylist;
 
   bool get onlineOnly => switch (this) {
     SortBy.datePlayed => true,
@@ -3368,6 +3371,7 @@ enum SortBy {
       SortBy.revenue => l10n.revenue,
       SortBy.runtime => l10n.duration,
       SortBy.defaultOrder => l10n.defaultOrder,
+      SortBy.inAlbumOrPlaylist => l10n.inAlbumOrPlaylist,
     };
   }
 
@@ -3398,6 +3402,7 @@ enum SortBy {
       SortBy.revenue => "Revenue",
       SortBy.runtime => "Runtime",
       SortBy.defaultOrder => "",
+      SortBy.inAlbumOrPlaylist => "ParentIndexNumber,IndexNumber,SortName",
     };
   }
 
@@ -3419,6 +3424,7 @@ enum SortBy {
       SortBy.revenue => "Revenue",
       SortBy.runtime => "Runtime",
       SortBy.defaultOrder => "",
+      SortBy.inAlbumOrPlaylist => "ParentIndexNumber,IndexNumber,SortName",
     };
   }
 
@@ -3440,6 +3446,7 @@ enum SortBy {
       SortBy.revenue => "Revenue",
       SortBy.runtime => "Runtime,AlbumArtist,Album,SortName",
       SortBy.defaultOrder => "",
+      SortBy.inAlbumOrPlaylist => "ParentIndexNumber,IndexNumber,SortName",
     };
   }
 
@@ -3458,6 +3465,7 @@ enum SortBy {
       SortBy.runtime => TablerIcons.stopwatch,
       SortBy.defaultOrder => TablerIcons.server,
       SortBy.budget => TablerIcons.moneybag,
+      SortBy.inAlbumOrPlaylist => TablerIcons.disc,
     };
   }
 }
