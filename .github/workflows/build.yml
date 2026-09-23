@@ -15,6 +15,10 @@ on:
       - main
       - redesign
 
+# set permission so that actions can modify repo contents, which is needed to add release assets
+permissions:
+  contents: write
+
 env:
   if_condition: &integration_if github.event_name == 'workflow_dispatch' ||
     (github.event_name == 'push' && github.repository == 'finamp-app/finamp' )
@@ -311,11 +315,11 @@ jobs:
 
     - name: Upload release archive
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-      uses: alexellis/upload-assets@0.4.1
+      uses: alexellis/upload-assets@0.5.0
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
-        asset_paths: '["./${{ env.TAR_NAME }}", "./${{ env.SHA_NAME }}"]'
+        asset_paths: '["./${{ env.TAR_NAME }}"]'
 
     - name: Run Integration Tests
       if: *integration_if
@@ -403,7 +407,7 @@ jobs:
 
     - name: Upload release archive
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-      uses: alexellis/upload-assets@0.4.1
+      uses: alexellis/upload-assets@0.5.0
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
