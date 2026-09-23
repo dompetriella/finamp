@@ -210,11 +210,11 @@ class _DownloadDialogState extends ConsumerState<DownloadDialog> {
               visualDensity: VisualDensity.compact,
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 4,
                 children: [
                   if (transcode) ...[
-                    Text(l10n!.downloadDialogTracks(widget.trackCount ?? 0)),
                     _TranscodeLineItem(
-                      label: l10n.downloadDialogFileSizeLabel,
+                      label: l10n!.downloadDialogFileSizeLabel,
                       originalValue: originalFileSizeFormatted,
                       transcodeValueCondition: (transcode && originalFileSize != transcodedFileSize),
                       transcodeValue: transcodedFileSizeFormatted,
@@ -305,12 +305,19 @@ class _TranscodeLineItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 4,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label),
-        Text(originalValue),
-        if (transcodeValueCondition) Row(children: [_TranscodeIcon(), Text(transcodeValue)]),
+        Wrap(
+          spacing: 4,
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(originalValue),
+            if (transcodeValueCondition) ...[_TranscodeIcon(), Text(transcodeValue)],
+          ],
+        ),
       ],
     );
   }
@@ -321,6 +328,9 @@ class _TranscodeIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(label: 'Transcoded into', child: Icon(Icons.arrow_right));
+    return Semantics(
+      label: AppLocalizations.of(context)!.downloadDialogTranscodedIntoSemanticLabel,
+      child: Icon(Icons.arrow_right),
+    );
   }
 }

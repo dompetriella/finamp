@@ -1619,16 +1619,6 @@
     "@downloadDialogTranscodeFilesTitle": {
         "description": "Title of the checkbox in the download dialog that toggles whether the downloaded tracks are transcoded."
     },
-    "downloadDialogTracks": "Tracks: {count}",
-    "@downloadDialogTracks": {
-        "description": "Line in the download dialog's transcode summary showing how many tracks will be downloaded.",
-        "placeholders": {
-            "count": {
-                "type": "int",
-                "example": "12"
-            }
-        }
-    },
     "downloadDialogFileSizeLabel": "File Size:",
     "@downloadDialogFileSizeLabel": {
         "description": "Label for the original vs. transcoded file size line in the download dialog's transcode summary. Should ideally have a colon at the end."
@@ -1644,6 +1634,10 @@
     "transcodeHint": "Transcode?",
     "@transcodeHint": {
         "description": "Initial text in downloads dropdown when 'Enable Transcoded Downloads' is set to ask."
+    },
+    "downloadDialogTranscodedIntoSemanticLabel": "Transcoded into",
+    "@downloadDialogTranscodedIntoSemanticLabel": {
+        "description": "Screen reader label for the arrow icon in the download dialog's transcode summary. It sits between the original value and the transcoded value, e.g. 'FLAC, transcoded into, OPUS'."
     },
     "doTranscode": "Download as {codec} @ {bitrate}{size, select, null{} other{ - ~{size}}}",
     "@doTranscode": {
