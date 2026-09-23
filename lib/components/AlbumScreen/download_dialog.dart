@@ -169,7 +169,7 @@ class _DownloadDialogState extends ConsumerState<DownloadDialog> {
     return AlertDialog(
       title: Text(AppLocalizations.of(context)!.addDownloads),
       content: Column(
-        spacing: 16,
+        spacing: 8,
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -203,36 +203,41 @@ class _DownloadDialogState extends ConsumerState<DownloadDialog> {
 
           if (widget.needsTranscode)
             CheckboxListTile(
-              title: Text('Transcode files?'),
+              title: Padding(padding: const EdgeInsets.only(bottom: 8.0), child: Text('Transcode files?')),
               value: transcode,
-              isThreeLine: true,
+              visualDensity: VisualDensity.compact,
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${widget.trackCount} tracks'),
-                  Row(
-                    children: [
-                      Text('File Size: $originalFileSizeFormatted'),
-                      if (transcode && originalFileSize != transcodedFileSize)
-                        Row(children: [_TranscodeIcon(), Text(transcodedFileSizeFormatted)]),
-                    ],
-                  ),
-                  Row(
-                    spacing: 4,
-                    children: [
-                      Text('Format: $formatsAsString'),
-                      if (transcode && formatsAsString != transcodedFileFormat)
-                        Row(children: [_TranscodeIcon(), Text(transcodedFileFormat)]),
-                    ],
-                  ),
-                  Row(
-                    spacing: 4,
-                    children: [
-                      Text('Bitrate: ${originalProfile.bitrateKbps}'),
-                      if (transcode && originalProfile.bitrateKbps != transcodeProfile.bitrateKbps)
-                        Row(children: [_TranscodeIcon(), Text(transcodeProfile.bitrateKbps)]),
-                    ],
-                  ),
+                  if (transcode) ...[
+                    Text('${widget.trackCount} tracks'),
+                    Wrap(
+                      children: [
+                        Text('File Size: '),
+                        Text(originalFileSizeFormatted),
+                        if (transcode && originalFileSize != transcodedFileSize)
+                          Row(children: [_TranscodeIcon(), Text(transcodedFileSizeFormatted)]),
+                      ],
+                    ),
+                    Wrap(
+                      spacing: 4,
+                      children: [
+                        Text('Format: '),
+                        Text(formatsAsString),
+                        if (transcode && formatsAsString != transcodedFileFormat)
+                          Row(children: [_TranscodeIcon(), Text(transcodedFileFormat)]),
+                      ],
+                    ),
+                    Wrap(
+                      spacing: 4,
+                      children: [
+                        Text('Bitrate: '),
+                        Text(originalProfile.bitrateKbps),
+                        if (transcode && originalProfile.bitrateKbps != transcodeProfile.bitrateKbps)
+                          Row(children: [_TranscodeIcon(), Text(transcodeProfile.bitrateKbps)]),
+                      ],
+                    ),
+                  ],
                 ],
               ),
               onChanged: (value) => setState(() {
