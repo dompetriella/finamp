@@ -127,6 +127,8 @@ class _DownloadDialogState extends ConsumerState<DownloadDialog> {
   Widget build(BuildContext context) {
     assert(widget.children?.every((child) => BaseItemDtoType.fromItem(child) == BaseItemDtoType.track) ?? true);
 
+    final l10n = AppLocalizations.of(context);
+
     // original file
     final originalProfile = DownloadProfile(transcodeCodec: FinampTranscodingCodec.original);
     final originalFileSize = widget.children?.map((e) => e.mediaSources?.first.size ?? 0).fold(0, (a, b) => a + b) ?? 0;
@@ -181,7 +183,7 @@ class _DownloadDialogState extends ConsumerState<DownloadDialog> {
                 spacing: 16,
                 children: [
                   DropdownMenu(
-                    label: Text('Download Location'),
+                    label: Text(l10n!.downloadDialogDownloadLocationLabel),
                     initialSelection: preferredDownloadLocation,
                     onSelected: (value) => setState(() {
                       selectedDownloadLocation = value;
@@ -196,7 +198,7 @@ class _DownloadDialogState extends ConsumerState<DownloadDialog> {
                         )
                         .toList(),
                   ),
-                  Text('Path: ${preferredDownloadLocation?.currentPath}'),
+                  Text(l10n.downloadDialogPath(preferredDownloadLocation?.currentPath ?? '')),
                 ],
               ),
             ),
@@ -210,21 +212,21 @@ class _DownloadDialogState extends ConsumerState<DownloadDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (transcode) ...[
-                    Wrap(spacing: 4, children: [Text('Tracks:'), Text('${widget.trackCount}')]),
+                    Text(l10n!.downloadDialogTracks(widget.trackCount ?? 0)),
                     _TranscodeLineItem(
-                      label: 'File Size:',
+                      label: l10n.downloadDialogFileSizeLabel,
                       originalValue: originalFileSizeFormatted,
                       transcodeValueCondition: (transcode && originalFileSize != transcodedFileSize),
                       transcodeValue: transcodedFileSizeFormatted,
                     ),
                     _TranscodeLineItem(
-                      label: 'Format:',
+                      label: l10n.downloadDialogFormatLabel,
                       originalValue: formatsAsString,
                       transcodeValueCondition: (transcode && formatsAsString != transcodedFileFormat),
                       transcodeValue: transcodedFileFormat,
                     ),
                     _TranscodeLineItem(
-                      label: 'Bitrate:',
+                      label: l10n.downloadDialogBitrateLabel,
                       originalValue: originalProfile.bitrateKbps,
                       transcodeValueCondition:
                           (transcode && originalProfile.bitrateKbps != transcodeProfile.bitrateKbps),
