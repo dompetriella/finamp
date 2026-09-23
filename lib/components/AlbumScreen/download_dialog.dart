@@ -210,32 +210,25 @@ class _DownloadDialogState extends ConsumerState<DownloadDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (transcode) ...[
-                    Text('${widget.trackCount} tracks'),
-                    Wrap(
-                      children: [
-                        Text('File Size: '),
-                        Text(originalFileSizeFormatted),
-                        if (transcode && originalFileSize != transcodedFileSize)
-                          Row(children: [_TranscodeIcon(), Text(transcodedFileSizeFormatted)]),
-                      ],
+                    Wrap(spacing: 4, children: [Text('Tracks:'), Text('${widget.trackCount}')]),
+                    _TranscodeLineItem(
+                      label: 'File Size:',
+                      originalValue: originalFileSizeFormatted,
+                      transcodeValueCondition: (transcode && originalFileSize != transcodedFileSize),
+                      transcodeValue: transcodedFileSizeFormatted,
                     ),
-                    Wrap(
-                      spacing: 4,
-                      children: [
-                        Text('Format: '),
-                        Text(formatsAsString),
-                        if (transcode && formatsAsString != transcodedFileFormat)
-                          Row(children: [_TranscodeIcon(), Text(transcodedFileFormat)]),
-                      ],
+                    _TranscodeLineItem(
+                      label: 'Format:',
+                      originalValue: formatsAsString,
+                      transcodeValueCondition: (transcode && formatsAsString != transcodedFileFormat),
+                      transcodeValue: transcodedFileFormat,
                     ),
-                    Wrap(
-                      spacing: 4,
-                      children: [
-                        Text('Bitrate: '),
-                        Text(originalProfile.bitrateKbps),
-                        if (transcode && originalProfile.bitrateKbps != transcodeProfile.bitrateKbps)
-                          Row(children: [_TranscodeIcon(), Text(transcodeProfile.bitrateKbps)]),
-                      ],
+                    _TranscodeLineItem(
+                      label: 'Bitrate:',
+                      originalValue: originalProfile.bitrateKbps,
+                      transcodeValueCondition:
+                          (transcode && originalProfile.bitrateKbps != transcodeProfile.bitrateKbps),
+                      transcodeValue: transcodeProfile.bitrateKbps,
                     ),
                   ],
                 ],
@@ -289,6 +282,33 @@ class _DownloadDialogState extends ConsumerState<DownloadDialog> {
                 },
           child: Text(AppLocalizations.of(context)!.addButtonLabel),
         ),
+      ],
+    );
+  }
+}
+
+class _TranscodeLineItem extends StatelessWidget {
+  const _TranscodeLineItem({
+    super.key,
+    required this.label,
+    required this.originalValue,
+    required this.transcodeValueCondition,
+    required this.transcodeValue,
+  });
+
+  final String label;
+  final String originalValue;
+  final bool transcodeValueCondition;
+  final String transcodeValue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 4,
+      children: [
+        Text(label),
+        Text(originalValue),
+        if (transcodeValueCondition) Row(children: [_TranscodeIcon(), Text(transcodeValue)]),
       ],
     );
   }
