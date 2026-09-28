@@ -955,15 +955,18 @@ class FinampSettings {
   @HiveField(152, defaultValue: "unset") // pre-generation default
   String deviceId;
 
+  //!!! Hive IDs 153, 154, 156, and 157 are burned by changes from https://github.com/finamp-app/finamp/pull/1504/ that were at some point released but reverted before the version was tagged.
+  // Don't ever use them
+
   /// Keeps verbose FINE/FINER/FINEST records for bug reports. Off by default;
   /// release builds otherwise cap at INFO.
-  @HiveField(153, defaultValue: DefaultSettings.verboseLogging)
+  @HiveField(158, defaultValue: DefaultSettings.verboseLogging)
   bool verboseLogging = DefaultSettings.verboseLogging;
 
-  @HiveField(154, defaultValue: DefaultSettings.showQuickActionsBanner)
+  @HiveField(159, defaultValue: DefaultSettings.showQuickActionsBanner)
   bool showQuickActionsBanner;
 
-  @HiveField(155, defaultValue: DefaultSettings.perTabContentViewType)
+  @HiveField(160, defaultValue: DefaultSettings.perTabContentViewType)
   @SettingsHelperMap("tabContentType")
   Map<ContentType, ContentViewType> perTabContentViewType;
 
@@ -3091,7 +3094,9 @@ enum ReleaseDateFormat {
   @HiveField(2)
   monthYear,
   @HiveField(3)
-  monthDayYear;
+  monthDayYear,
+  @HiveField(4)
+  numerical;
 
   /// Human-readable version of this enum. I've written longer descriptions on
   /// enums like [ContentType], and I can't be bothered to copy and paste it
@@ -3110,6 +3115,8 @@ enum ReleaseDateFormat {
         return l10n.releaseDateFormatMonthYear;
       case ReleaseDateFormat.monthDayYear:
         return l10n.releaseDateFormatMonthDayYear;
+      case ReleaseDateFormat.numerical:
+        return l10n.releaseDateFormatNumerical;
     }
   }
 }
